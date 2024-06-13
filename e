@@ -14,10 +14,14 @@ let
     #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
     #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (2)"}),
     #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (2)", Table.ColumnNames(#"Transform File (2)"(#"Sample File (2)"))),
+
+    // Filter out non-month values
+    #"Filtered Rows3" = Table.SelectRows(#"Expanded Table Column1", each Text.Contains([Month], "January") or Text.Contains([Month], "February") or Text.Contains([Month], "March") or Text.Contains([Month], "April") or Text.Contains([Month], "May") or Text.Contains([Month], "June") or Text.Contains([Month], "July") or Text.Contains([Month], "August") or Text.Contains([Month], "September") or Text.Contains([Month], "October") or Text.Contains([Month], "November") or Text.Contains([Month], "December")),
+
+    // Ensure the "Month" column is consistent and convert to text
+    #"Transformed Month Column" = Table.TransformColumns(#"Filtered Rows3", {{"Month", each Text.From(_), type text}}),
     
-    // Filter rows to ensure the Month column is present
-    #"Filtered Rows3" = Table.SelectRows(#"Expanded Table Column1", each [Month] <> null),
-    #"Added Index" = Table.AddIndexColumn(#"Filtered Rows3", "Index", 0, 1),
+    #"Added Index" = Table.AddIndexColumn(#"Transformed Month Column", "Index", 0, 1),
     #"Inserted Addition" = Table.AddColumn(#"Added Index", "Addition", each [Index] + 1, type number),
 
     // Ensure the "Month" column exists before merging
