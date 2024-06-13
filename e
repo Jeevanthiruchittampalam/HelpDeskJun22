@@ -17,10 +17,6 @@ let
     
     // Filter rows to ensure the Month column is present
     #"Filtered Rows3" = Table.SelectRows(#"Expanded Table Column1", each [Month] <> null),
-
-    // Add a step to inspect the columns before adding the index
-    #"Check Filtered Rows3" = Table.SelectColumns(#"Filtered Rows3", {"Month", "Other Columns"}),  // Include other necessary columns
-    
     #"Added Index" = Table.AddIndexColumn(#"Filtered Rows3", "Index", 0, 1),
     #"Inserted Addition" = Table.AddColumn(#"Added Index", "Addition", each [Index] + 1, type number),
 
@@ -30,10 +26,13 @@ let
     // Perform the nested join
     #"Merged Queries" = Table.NestedJoin(#"Inserted Addition", {"Index"}, #"Inserted Addition", {"Addition"}, "Inserted Addition", JoinKind.LeftOuter),
 
-    // Add a step to inspect the columns after merging
-    #"Check Merged Queries" = Table.SelectColumns(#"Merged Queries", {"Inserted Addition.Month", "Index", "Addition"}),
+    // Inspect the structure of the merged queries
+    #"Check Merged Queries Structure" = Table.SelectColumns(#"Merged Queries", {"Inserted Addition"}),
 
-    // Expand the nested table
+    // Ensure the "Month" column exists in the nested table before expanding
+    #"Check Merged Queries" = Table.SelectColumns(#"Merged Queries", {"Inserted Addition"}),
+
+    // Expand the nested table and ensure the "Month" column is included
     #"Expanded Insert Addition" = Table.ExpandTableColumn(#"Merged Queries", "Inserted Addition", {"Month"}, {"Inserted Addition.Month"}),
 
     // Further transformations
